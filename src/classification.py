@@ -130,14 +130,14 @@ class Classification():
 
 def main():
     # Cell + Lcm + Tp 分出 TFT 顯示器、Paper 顯示器
-    cell_data_dir = "../../PLM/Cell產品清單20221205.xlsx"
-    lcm_data_dir = "../../PLM/LCM產品清單20221205.xlsx"
-    tp_data_dir = "../../PLM/TP產品清單20221205.xlsx"
+    cell_data_dir = "../data/PLM/Cell產品清單20221205.xlsx"
+    lcm_data_dir = "../data/PLM/LCM產品清單20221205.xlsx"
+    tp_data_dir = "../data/PLM/TP產品清單20221205.xlsx"
     # 方案
-    systemBoard_data_dir = "../../PLM/方案產品清單20221205.xlsx"
-    solution_data_dir = "../../PLM/方案整機產品清單20221205.xlsx"
+    systemBoard_data_dir = "../data/PLM/方案產品清單20221205.xlsx"
+    solution_data_dir = "../data/PLM/方案整機產品清單20221205.xlsx"
     # hannspree
-    hannspree_data_dir = "../../PLM/Hannspree整機產品清單20221205.xlsx"
+    hannspree_data_dir = "../data/PLM/Hannspree整機產品清單20221205.xlsx"
 
     x = Classification(cell_data_dir,lcm_data_dir,tp_data_dir,systemBoard_data_dir,solution_data_dir,hannspree_data_dir)
     tft_p_df,tft_c_df,paper_p_df,paper_c_df,solution_df,solution_hannspree_df,hannspree_df,out_json = x.output_folder()
@@ -145,6 +145,8 @@ def main():
     print(f"\ntftdisplay_Preferred:\n{tft_p_df}\ntftdisplay_Custom:\n{tft_c_df}\npaperdisplay_Preferred:\n{paper_p_df}\npaperdisplay_Custom:\n{paper_c_df}")
     print(f"\nsystemBoard:\n{solution_df}\nsolution_hannspree:\n{solution_hannspree_df}\npaperdisplay_Custom:{hannspree_df}")
     print(f"\njson_data:\n{out_json}")
+
+    return tft_p_df,tft_c_df,paper_p_df,paper_c_df,solution_df,solution_hannspree_df,hannspree_df
 
 if __name__=="__main__":
     main()

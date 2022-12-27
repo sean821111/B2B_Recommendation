@@ -2,11 +2,13 @@ import pandas as pd
 import numpy as np
 import re
 import statistics
+from sklearn.preprocessing import LabelEncoder
 
 class DataCleaning():
     def __init__(self, data) -> None:
         self.data = data 
         self.SKUs = data["WTPARTNUMBER"]
+        self.label_encoder = LabelEncoder()
 
     def isNaN(self, num):
         return num != num
@@ -23,15 +25,21 @@ class DataCleaning():
 
         df['APPLICATION'] = data['APPLICATION']
         df.loc[self.isNaN(df["APPLICATION"]) , "APPLICATION"] =  statistics.mode(data['APPLICATION'])
+        df['APPLICATION'] = self.label_encoder.fit_transform(df['APPLICATION'])
 
         df['COLORGAMUT'] = data['COLORGAMUT']
+        df["COLORGAMUT"].fillna(df["COLORGAMUT"].mode()[0], inplace=True)
         df['COLORGAMUT'] = self.z_score(df['COLORGAMUT'].to_numpy())
 
         # df['COLOR_NUMBER'] = data['COLOR_NUMBER']
         # df['BRIGHTNESS'] = data['BRIGHTNESS']
         df['RESPONSE_TIME_TYP'] = data['RESPONSE_TIME_TYP']
+        df["RESPONSE_TIME_TYP"].fillna(df["RESPONSE_TIME_TYP"].mode()[0], inplace=True)
+
         df['VIEWING_DIRECTION'] = data['VIEWING_DIRECTION']
         df.loc[self.isNaN(df["VIEWING_DIRECTION"]) , "VIEWING_DIRECTION"] = 'Free'
+        df['VIEWING_DIRECTION'] = self.label_encoder.fit_transform(df['VIEWING_DIRECTION'])
+
         # df['OPERATION_TEMP'] = data['OPERATION_TEMP']
         # df['STORAGE_TEMP']= data['STORAGE_TEMP']
 
@@ -69,15 +77,17 @@ class DataCleaning():
         df['RESOLUTION_H'] = self.z_score(RESOLUTION_H)
         df['RESOLUTION_V'] = self.z_score(RESOLUTION_V)
 
-
         # GLASS THICKNESS
-        GLASS_THICKNESS = []
-        for x in data["GLASS_THICKNESS"]:
-            if not self.isNaN(x):
-                GLASS_THICKNESS.append(float(re.split(r'mm| ',x)[0]))
-            else:
-                GLASS_THICKNESS.append(statistics.mode(GLASS_THICKNESS)) # using typical value assign
-        df['GLASS_THICKNESS'] = self.z_score(GLASS_THICKNESS)
+        try:
+            GLASS_THICKNESS = []
+            for x in data["GLASS_THICKNESS"]:
+                if not self.isNaN(x):
+                    GLASS_THICKNESS.append(float(re.split(r'mm| ',x)[0]))
+                else:
+                    GLASS_THICKNESS.append(statistics.mode(GLASS_THICKNESS)) # using typical value assign
+            df['GLASS_THICKNESS'] = self.z_score(GLASS_THICKNESS)
+        except Exception as exp:
+            print(exp)
 
         # CONTRAST RATIO
         CONTRAST_RATIO = []
@@ -92,6 +102,7 @@ class DataCleaning():
         # VIEW ANGLE (H/V)
         VIEW_ANGLE_H = []
         VIEW_ANGLE_V = []
+        data["VIEW_ANGLE_H_V"].fillna(data["VIEW_ANGLE_H_V"].mode()[0], inplace=True)
         for x in data["VIEW_ANGLE_H_V"]:
             H = int(re.split(r'/| ', x)[0])
             V = int(re.split(r'/| ', x)[1])
@@ -150,20 +161,29 @@ class DataCleaning():
             df[k] = d2[k]
 
         # TOUCH_STRUCTURE
-        TOUCH_STRUCTURE = []
-        for x in data["TOUCH_STRUCTURE"]:
-            if not self.isNaN(x):
-                TOUCH_STRUCTURE.append(x)
-            else:
-                TOUCH_STRUCTURE.append("Non_Touch")
+        try:
+            TOUCH_STRUCTURE = []
+            for x in data["TOUCH_STRUCTURE"]:
+                if not self.isNaN(x):
+                    TOUCH_STRUCTURE.append(x)
+                else:
+                    TOUCH_STRUCTURE.append("Non_Touch")
 
-        df['TOUCH_STRUCTURE'] = TOUCH_STRUCTURE
+            df['TOUCH_STRUCTURE'] = TOUCH_STRUCTURE
+        except Exception as exp:
+            print(exp)
 
         # LCD_TECHNOLOGY
         d3 = pd.get_dummies(data["LCD_TECHNOLOGY"])
         for k in d3.keys():
             df[k] = d3[k]
-            
+    
+        # 'COLOR_NUMBER', 'OPERATION_TEMP', 'STORAGE_TEMP'
+        special_features = ['COLOR_NUMBER', 'OPERATION_TEMP', 'STORAGE_TEMP']
+        for col in special_features:
+            data[col].fillna(data[col].mode()[0], inplace=True)
+            df[col] = self.label_encoder.fit_transform(data[col])
+
         return df
 
 if __name__ == '__main__':

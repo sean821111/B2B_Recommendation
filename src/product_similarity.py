@@ -19,7 +19,7 @@ class Dissimilarity():
     """
     def __init__(self, df) -> None:
         self.df = df
-        SKUs = df["WTPARTNUMBER"]
+        self.SKUs = df["WTPARTNUMBER"]
 
     def matching_dissim(self, a, b, **_):
         """Simple matching dissimilarity function"""
@@ -30,6 +30,7 @@ class Dissimilarity():
         if np.isnan(a).any() or np.isnan(b).any():
             raise ValueError("Missing values detected in numerical columns.")
         return np.sum((a - b) ** 2, axis=1)
+
     def _split_num_cat(self, X, categorical):
         """Extract numerical and categorical columns.
         Convert to numpy arrays, if needed.
@@ -41,7 +42,6 @@ class Dissimilarity():
         Xcat = np.asanyarray(X[:, categorical])
         return Xnum, Xcat
 
-    
     def similarItems(self, sku):
         dfMatrix = df.to_numpy()
         catColumnsPos = [df.columns.get_loc(col) for col in list(df.select_dtypes('object').columns)]
@@ -60,25 +60,34 @@ class Dissimilarity():
         for i,v in enumerate(sortedIdx):
             sortedSKUs[v] = self.SKUs[i]
         return sortedSKUs
-    def batch_similarItems(self, topN=10):
-        for sku in self.SKUs:
-            topSimilarItems = self.similarItems(sku)
-            
-            return topSimilarItems[0:topN]
-            
-if __name__ == '__main__':
-    filePath = "./data/CELL_LCM_TP.xlsx"
-    data = pd.read_excel(filePath)
-    
-    # combine LCM CELL TP data 
 
-    
+    def batch_similarItems(self, topN=10):
+        """Excel format"""
+        sku_sim_table = pd.DataFrame()
+
+        for sku in self.SKUs:
+            sku_sim_table[sku] = self.similarItems(sku)[0:topN]
+
+        return sku_sim_table
+
+if __name__ == '__main__':
+    # concat LCM CELL TP data
+    filePath = "../data/CELL_LCM_TP.xlsx"
+    data = pd.read_excel(filePath)
+
+    # concat (LCM CELL TP) + (solution)
+    # TO DO...
+
+    # clean and encode
     data_cleaning = dc.DataCleaning(data)
     df = data_cleaning.encoding()
-    
+
+    # separte to tdtdisplay, ... (total 7 types)
+    tft_p_df, tft_c_df, paper_p_df, paper_c_df, solution_df, solution_hannspree_df, hannspree_df = classification.main()
+    # TO DO...
+
+    # Calculate similarity table
     dissim = Dissimilarity(df)
-    
+
     # single SKU 
     dissim.similarItems("010GPW2-900001-PX")
-    
-    
