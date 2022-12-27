@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np 
 import data_cleanning as dc
 import classification
+from recommendation_model import Recommend
 
 class Dissimilarity():
     """
@@ -17,7 +18,7 @@ class Dissimilarity():
         automatically calculated from data.
     """
     def __init__(self, df) -> None:
-        self.df = df.drop("WTPARTNUMBER", axis=1)
+        self.df = df
         self.SKUs = df["WTPARTNUMBER"]
 
     def matching_dissim(self, a, b, **_):
@@ -42,15 +43,17 @@ class Dissimilarity():
         return Xnum, Xcat
 
     def similarItems(self, sku):
-        dfMatrix = df.to_numpy()
-        catColumnsPos = [df.columns.get_loc(col) for col in list(df.select_dtypes('object').columns)]
+        dfMatrix = self.df.to_numpy()
+        catColumnsPos = [self.df.columns.get_loc(col) for col in list(self.df.select_dtypes('object').columns)]
 
         Xnum, Xcat = self._split_num_cat(dfMatrix, catColumnsPos)
 
         gamma = 0.5 * np.mean(Xnum.std(axis=0))
 
-        num_dissim = self.euclidean_dissim(sku, Xnum)
-        cat_dissim = self.matching_dissim(sku, Xcat)
+        input_sku_attr = self.df.loc[self.df["WTPARTNUMBER"] == sku, :].drop("WTPARTNUMBER", axis=1)
+
+        num_dissim = self.euclidean_dissim(input_sku_attr, Xnum)
+        cat_dissim = self.matching_dissim(input_sku_attr, Xcat)
 
         dissim = num_dissim + gamma * cat_dissim
         sortedIdx = np.argsort(dissim)
@@ -77,12 +80,27 @@ class Dissimilarity():
         }
         ```
         """
-        skuSimiliar = {}
+        skuSimilar = {}
 
         for sku in self.SKUs:
-            skuSimiliar[sku] = self.similarItems(sku)[0:topN]
+            skuSimilar[sku] = self.similarItems(sku)[0:topN]
 
-        return skuSimiliar
+        return skuSimilar
+
+def content_based(df : pd.DataFrame,
+                  target_feature : str="WTPARTNUMBER",
+                  filter_limit : int=10):
+
+    Recom = Recommend(df, target_feature)
+
+    # using the target_attr_table to calculate the target similarity
+    cosine_sim = Recom.cosine_similarity()
+
+    items_name = df[target_feature]
+    df_sim = pd.DataFrame(cosine_sim, columns=items_name)
+    df_sim.index = items_name
+
+    return df_sim
 
 if __name__ == '__main__':
     # (LCM CELL TP) data
