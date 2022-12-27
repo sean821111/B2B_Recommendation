@@ -1,3 +1,7 @@
+# B2B_Recommendation
+B2B Recommandation system
+Given a SKU return top N similar item.
+
 ### Remark - 篩選後之特徵
 <details><summary>CELL+LCM+TP</summary><p>
     {   'APPLICATION',
@@ -139,4 +143,3 @@
         'BRIGHTNESS'
     }
 </p></details>
-
