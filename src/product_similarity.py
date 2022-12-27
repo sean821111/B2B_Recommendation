@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np 
-import csv
 import data_cleanning as dc
 import classification
 
@@ -18,7 +17,7 @@ class Dissimilarity():
         automatically calculated from data.
     """
     def __init__(self, df) -> None:
-        self.df = df
+        self.df = df.drop("WTPARTNUMBER", axis=1)
         self.SKUs = df["WTPARTNUMBER"]
 
     def matching_dissim(self, a, b, **_):
@@ -53,7 +52,7 @@ class Dissimilarity():
         num_dissim = self.euclidean_dissim(sku, Xnum)
         cat_dissim = self.matching_dissim(sku, Xcat)
 
-        dissim = num_dissim + gamma* cat_dissim
+        dissim = num_dissim + gamma * cat_dissim
         sortedIdx = np.argsort(dissim)
 
         sortedSKUs = np.empty(len(self.SKUs),  dtype='object')
@@ -61,33 +60,51 @@ class Dissimilarity():
             sortedSKUs[v] = self.SKUs[i]
         return sortedSKUs
 
-    def batch_similarItems(self, topN=10):
-        """Excel format"""
-        sku_sim_table = pd.DataFrame()
+    def batch_similarItems(self, type_="tftdisplay_Preferred", topN=10):
+        """JSON format
+        
+        ```Json
+        {
+            "sku1": {
+                "tftdisplay_Preferred": ["sku1", "sku2", ...],
+                "tftdisplay_Custom": ["sku1", "sku3"],
+                "paperdispla_Preferred": ["sku1"],
+                "paperdisplay_Custom": [],
+                "systemBoard": [],
+                "solution": [],
+                "hannspree": [] 
+            },
+        }
+        ```
+        """
+        skuSimiliar = {}
 
         for sku in self.SKUs:
-            sku_sim_table[sku] = self.similarItems(sku)[0:topN]
+            skuSimiliar[sku] = self.similarItems(sku)[0:topN]
 
-        return sku_sim_table
+        return skuSimiliar
 
 if __name__ == '__main__':
-    # concat LCM CELL TP data
+    # (LCM CELL TP) data
     filePath = "../data/CELL_LCM_TP.xlsx"
     data = pd.read_excel(filePath)
-
-    # concat (LCM CELL TP) + (solution)
-    # TO DO...
 
     # clean and encode
     data_cleaning = dc.DataCleaning(data)
     df = data_cleaning.encoding()
 
-    # separte to tdtdisplay, ... (total 7 types)
-    tft_p_df, tft_c_df, paper_p_df, paper_c_df, solution_df, solution_hannspree_df, hannspree_df = classification.main()
-    # TO DO...
+    for col in df.columns.drop("WTPARTNUMBER"):
+        df[col] = df[col].astype(float)
 
-    # Calculate similarity table
-    dissim = Dissimilarity(df)
+    # separte to tdtdisplay, ... (total 7 types)
+    *lcm_cell_tp, solution_df, solution_hannspree_df, hannspree_df = classification.main()
+
+    df_tft_p, df_tft_c, df_paper_p, df_paper_c = [pd.merge(df, tmp, how="inner", on="WTPARTNUMBER") for tmp in lcm_cell_tp]
+
+    # calculate similarity
+    dissim = Dissimilarity(df_tft_p)
 
     # single SKU 
     dissim.similarItems("010GPW2-900001-PX")
+
+    df_tft_p.dtypes

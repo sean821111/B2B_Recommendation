@@ -23,6 +23,8 @@ class DataCleaning():
         # initialize 
         df = pd.DataFrame()
 
+        df["WTPARTNUMBER"] = data["WTPARTNUMBER"]
+
         df['APPLICATION'] = data['APPLICATION']
         df.loc[self.isNaN(df["APPLICATION"]) , "APPLICATION"] =  statistics.mode(data['APPLICATION'])
         df['APPLICATION'] = self.label_encoder.fit_transform(df['APPLICATION'])

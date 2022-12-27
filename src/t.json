@@ -1,0 +1,20 @@
+{
+  "sku1": {
+    "tftdisplay_Preferred": ["sku1", "sku2"],
+    "tftdisplay_Custom": ["sku1", "sku3"],
+    "paperdispla_Preferred": ["sku1"],
+    "paperdisplay_Custom": [],
+    "systemBoard": [],
+    "solution": [],
+    "hannspree": [] 
+  },
+  "sku2": {
+    "tftdisplay_Preferred": ["sku2", "sku1"],
+    "tftdisplay_Custom": ["sku2", "sku3"],
+    "paperdispla_Preferred": [""],
+    "paperdisplay_Custom": [],
+    "systemBoard": [],
+    "solution": [],
+    "hannspree": []
+  }
+}
