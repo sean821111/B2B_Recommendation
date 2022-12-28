@@ -42,7 +42,7 @@ class Dissimilarity():
         Xcat = np.asanyarray(X[:, categorical])
         return Xnum, Xcat
 
-    def similarItems(self, sku):
+    def similarItems(self, skuIndex):
         dfMatrix = df.to_numpy()
         catColumnsPos = [df.columns.get_loc(col) for col in list(df.select_dtypes('object').columns)]
 
@@ -50,8 +50,8 @@ class Dissimilarity():
 
         gamma = 0.5 * np.mean(Xnum.std(axis=0))
 
-        num_dissim = self.euclidean_dissim(sku, Xnum)
-        cat_dissim = self.matching_dissim(sku, Xcat)
+        num_dissim = self.euclidean_dissim(Xnum[skuIndex], Xnum)
+        cat_dissim = self.matching_dissim(Xcat[skuIndex], Xcat)
 
         dissim = num_dissim + gamma* cat_dissim
         sortedIdx = np.argsort(dissim)
@@ -65,8 +65,8 @@ class Dissimilarity():
         """Excel format"""
         sku_sim_table = pd.DataFrame()
 
-        for sku in self.SKUs:
-            sku_sim_table[sku] = self.similarItems(sku)[0:topN]
+        for id,sku in enumerate(self.SKUs):
+            sku_sim_table[sku] = self.similarItems(id)[0:topN]
 
         return sku_sim_table
 
