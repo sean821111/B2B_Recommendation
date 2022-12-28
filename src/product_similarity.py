@@ -92,7 +92,13 @@ class Dissimilarity():
         def helper(df_type, type_, sku):
             if sku in df_type['SKU'].values:
                 sku_similar = df_type.sort_values(by=[sku], ascending=[False])[["SKU", sku]]
-                skus_similar[sku][type_] = sku_similar["SKU"].iloc[:topN].to_list()
+                sku_list = sku_similar["SKU"].iloc[:topN].to_list()
+
+                # keep input_sku be first element
+                sku_list.remove(sku)
+                sku_list.insert(0, sku)
+
+                skus_similar[sku][type_] = sku_list
             else:
                 skus_similar[sku][type_] = []
 
