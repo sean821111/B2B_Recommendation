@@ -3,6 +3,7 @@ import numpy as np
 import data_cleanning as dc
 import classification
 from recommendation_model import Recommend
+import json
 
 class Dissimilarity():
     """
@@ -63,7 +64,8 @@ class Dissimilarity():
             sortedSKUs[v] = self.SKUs[i]
         return sortedSKUs
 
-    def batch_similarItems(self, type_="tftdisplay_Preferred", topN=10):
+    @staticmethod
+    def batch_similarItems(df, topN=15):
         """JSON format
         
         ```Json
@@ -80,27 +82,48 @@ class Dissimilarity():
         }
         ```
         """
-        skuSimilar = {}
+        skus_similar = {}
 
-        for sku in self.SKUs:
-            skuSimilar[sku] = self.similarItems(sku)[0:topN]
+        # separte to tdtdisplay, ... (total 7 types)
+        *lcm_cell_tp, solution_df, solution_hannspree_df, hannspree_df = classification.main()
+        df_tft_p, df_tft_c, df_paper_p, df_paper_c = [content_based(pd.merge(df, tmp, how="inner", on="WTPARTNUMBER")) \
+                                                      for tmp in lcm_cell_tp]
 
-        return skuSimilar
+        def helper(df_type, type_, sku):
+            if sku in df_type['SKU'].values:
+                sku_similar = df_type.sort_values(by=[sku], ascending=[False])[["SKU", sku]]
+                skus_similar[sku][type_] = sku_similar["SKU"].iloc[:topN].to_list()
+            else:
+                skus_similar[sku][type_] = []
+
+        for sku in df["WTPARTNUMBER"]:
+            if sku not in skus_similar: skus_similar[sku] = {}
+
+            helper(df_tft_p, "tftdisplay_Preferred", sku)
+            helper(df_tft_c, "tftdisplay_Custom", sku)
+            helper(df_paper_p, "paperdisplay_Preferred", sku)
+            helper(df_paper_c, "paperdisplay_Custom", sku)
+
+            # TO DO...
+            skus_similar[sku]["systemBoard"] = []
+            skus_similar[sku]["solution_hannspree"] = []
+            skus_similar[sku]["hannspree"] = []
+
+        return skus_similar
 
 def content_based(df : pd.DataFrame,
-                  target_feature : str="WTPARTNUMBER",
-                  filter_limit : int=10):
+                  target_feature : str="WTPARTNUMBER"):
 
     Recom = Recommend(df, target_feature)
 
     # using the target_attr_table to calculate the target similarity
     cosine_sim = Recom.cosine_similarity()
 
-    items_name = df[target_feature]
-    df_sim = pd.DataFrame(cosine_sim, columns=items_name)
-    df_sim.index = items_name
+    sku = df[target_feature]
+    df_simMatrix = pd.DataFrame(cosine_sim, columns=sku)
+    df_simMatrix["SKU"] = sku
 
-    return df_sim
+    return df_simMatrix
 
 if __name__ == '__main__':
     # (LCM CELL TP) data
@@ -114,15 +137,7 @@ if __name__ == '__main__':
     for col in df.columns.drop("WTPARTNUMBER"):
         df[col] = df[col].astype(float)
 
-    # separte to tdtdisplay, ... (total 7 types)
-    *lcm_cell_tp, solution_df, solution_hannspree_df, hannspree_df = classification.main()
+    skus_similar = Dissimilarity.batch_similarItems(df)
 
-    df_tft_p, df_tft_c, df_paper_p, df_paper_c = [pd.merge(df, tmp, how="inner", on="WTPARTNUMBER") for tmp in lcm_cell_tp]
-
-    # calculate similarity
-    dissim = Dissimilarity(df_tft_p)
-
-    # single SKU 
-    dissim.similarItems("010GPW2-900001-PX")
-
-    df_tft_p.dtypes
+    with open("../data/PLM/SKU_Simlar.json", "w") as outfile:
+        json.dump(skus_similar, outfile)

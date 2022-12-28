@@ -40,9 +40,8 @@ class Recommend:
         from sklearn.metrics.pairwise import cosine_similarity
 
         target_only_attr_table = self.target_attr_table.drop(self.target_feature, axis=1)
-        df_norm = (target_only_attr_table - target_only_attr_table.min()) / (target_only_attr_table.max() - target_only_attr_table.min())
 
-        cosine_sim = cosine_similarity(df_norm)
+        cosine_sim = cosine_similarity(target_only_attr_table)
 
         return cosine_sim
 
