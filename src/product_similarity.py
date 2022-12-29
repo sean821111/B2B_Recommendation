@@ -89,6 +89,14 @@ class Dissimilarity():
         df_tft_p, df_tft_c, df_paper_p, df_paper_c = [content_based(pd.merge(df, tmp, how="inner", on="WTPARTNUMBER")) \
                                                       for tmp in lcm_cell_tp]
 
+        magento_skus = set(df_tft_p["SKU"])|\
+                        set(df_tft_c["SKU"])|\
+                        set(df_paper_p["SKU"])|\
+                        set(df_paper_c["SKU"])|\
+                        set(solution_df["WTPARTNUMBER"])|\
+                        set(solution_hannspree_df["WTPARTNUMBER"])|\
+                        set(hannspree_df["WTPARTNUMBER"])
+
         def helper(df_type, type_, sku):
             if sku in df_type['SKU'].values:
                 sku_similar = df_type.sort_values(by=[sku], ascending=[False])[["SKU", sku]]
@@ -102,18 +110,27 @@ class Dissimilarity():
             else:
                 skus_similar[sku][type_] = []
 
-        for sku in df["WTPARTNUMBER"]:
+        def helper_rule(df_type, type_):
+            for sku in magento_skus:
+                if sku in df_type["WTPARTNUMBER"].values:
+                    if df_type.shape[0] > topN:
+                        skus_similar[sku][type_] = pd.read_csv(f"../data/PLM/{type_}.csv")["WTPARTNUMBER"].iloc[:topN].to_list()
+                    else:
+                        skus_similar[sku][type_] = pd.read_csv(f"../data/PLM/{type_}.csv")["WTPARTNUMBER"].to_list()
+                else:
+                    skus_similar[sku][type_] = []
+
+        for sku in magento_skus:
             if sku not in skus_similar: skus_similar[sku] = {}
 
             helper(df_tft_p, "tftdisplay_Preferred", sku)
             helper(df_tft_c, "tftdisplay_Custom", sku)
             helper(df_paper_p, "paperdisplay_Preferred", sku)
             helper(df_paper_c, "paperdisplay_Custom", sku)
-
-            # TO DO...
-            skus_similar[sku]["systemBoard"] = []
-            skus_similar[sku]["solution_hannspree"] = []
-            skus_similar[sku]["hannspree"] = []
+        
+        helper_rule(solution_df, "systemBoard")
+        helper_rule(solution_hannspree_df, "solution_hannspree")
+        helper_rule(hannspree_df, "hannspree")
 
         return skus_similar
 
@@ -145,5 +162,5 @@ if __name__ == '__main__':
 
     skus_similar = Dissimilarity.batch_similarItems(df)
 
-    with open("../data/PLM/SKU_Simlar.json", "w") as outfile:
+    with open("../data/PLM/SKU_Similar.json", "w") as outfile:
         json.dump(skus_similar, outfile)
