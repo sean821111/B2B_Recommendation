@@ -91,7 +91,6 @@ class Dissimilarity():
         df_tft_p, df_tft_c, df_paper_p, df_paper_c = [content_based(pd.merge(df, tmp, how="inner", on="WTPARTNUMBER")) \
                                                       for tmp in lcm_cell_tp]
 
-<<<<<<< HEAD
         magento_skus = set(df_tft_p["SKU"])|\
                         set(df_tft_c["SKU"])|\
                         set(df_paper_p["SKU"])|\
@@ -99,8 +98,6 @@ class Dissimilarity():
                         set(solution_df["WTPARTNUMBER"])|\
                         set(solution_hannspree_df["WTPARTNUMBER"])|\
                         set(hannspree_df["WTPARTNUMBER"])
-=======
->>>>>>> 4ef653aa5bac21648c101444b790621e932d9f6b
 
         def helper(df_type, type_, sku):
             if sku in df_type['SKU'].values:
