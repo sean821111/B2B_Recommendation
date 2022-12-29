@@ -43,18 +43,20 @@ class Dissimilarity():
         Xcat = np.asanyarray(X[:, categorical])
         return Xnum, Xcat
 
-    def similarItems(self, sku):
-        dfMatrix = self.df.to_numpy()
-        catColumnsPos = [self.df.columns.get_loc(col) for col in list(self.df.select_dtypes('object').columns)]
+
+    def similarItems(self, skuIndex):
+        dfMatrix = df.to_numpy()
+        catColumnsPos = [df.columns.get_loc(col) for col in list(df.select_dtypes('object').columns)]
+
 
         Xnum, Xcat = self._split_num_cat(dfMatrix, catColumnsPos)
 
         gamma = 0.5 * np.mean(Xnum.std(axis=0))
 
-        input_sku_attr = self.df.loc[self.df["WTPARTNUMBER"] == sku, :].drop("WTPARTNUMBER", axis=1)
 
-        num_dissim = self.euclidean_dissim(input_sku_attr, Xnum)
-        cat_dissim = self.matching_dissim(input_sku_attr, Xcat)
+        num_dissim = self.euclidean_dissim(Xnum[skuIndex], Xnum)
+        cat_dissim = self.matching_dissim(Xcat[skuIndex], Xcat)
+
 
         dissim = num_dissim + gamma * cat_dissim
         sortedIdx = np.argsort(dissim)
@@ -89,6 +91,7 @@ class Dissimilarity():
         df_tft_p, df_tft_c, df_paper_p, df_paper_c = [content_based(pd.merge(df, tmp, how="inner", on="WTPARTNUMBER")) \
                                                       for tmp in lcm_cell_tp]
 
+<<<<<<< HEAD
         magento_skus = set(df_tft_p["SKU"])|\
                         set(df_tft_c["SKU"])|\
                         set(df_paper_p["SKU"])|\
@@ -96,6 +99,8 @@ class Dissimilarity():
                         set(solution_df["WTPARTNUMBER"])|\
                         set(solution_hannspree_df["WTPARTNUMBER"])|\
                         set(hannspree_df["WTPARTNUMBER"])
+=======
+>>>>>>> 4ef653aa5bac21648c101444b790621e932d9f6b
 
         def helper(df_type, type_, sku):
             if sku in df_type['SKU'].values:
