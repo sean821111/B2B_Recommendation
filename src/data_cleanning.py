@@ -31,6 +31,8 @@ class DataCleaning():
             df.loc[self.isNaN(df["APPLICATION"]) , "APPLICATION"] =  statistics.mode(data['APPLICATION'])
             df['APPLICATION'] = self.label_encoder.fit_transform(df['APPLICATION'])
 
+            df["WTPARTNUMBER"] = data["WTPARTNUMBER"]
+
             df['COLORGAMUT'] = data['COLORGAMUT']
             df["COLORGAMUT"].fillna(df["COLORGAMUT"].mode()[0], inplace=True)
             df['COLORGAMUT'] = self.z_score(df['COLORGAMUT'].to_numpy())
