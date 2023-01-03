@@ -130,14 +130,14 @@ class Classification():
 
 def main():
     # Cell + Lcm + Tp 分出 TFT 顯示器、Paper 顯示器
-    cell_data_dir = "../data/PLM/Cell產品清單20221205.xlsx"
-    lcm_data_dir = "../data/PLM/LCM產品清單20221205.xlsx"
-    tp_data_dir = "../data/PLM/TP產品清單20221205.xlsx"
+    cell_data_dir = "../data/PLM/Cell產品清單20221229.xlsx"
+    lcm_data_dir = "../data/PLM/LCM產品清單20221229.xlsx"
+    tp_data_dir = "../data/PLM/TP產品清單20221229.xlsx"
     # 方案
-    systemBoard_data_dir = "../data/PLM/方案產品清單20221205.xlsx"
-    solution_data_dir = "../data/PLM/方案整機產品清單20221205.xlsx"
+    systemBoard_data_dir = "../data/PLM/方案產品清單20221229.xlsx"
+    solution_data_dir = "../data/PLM/方案整機產品清單20221229.xlsx"
     # hannspree
-    hannspree_data_dir = "../data/PLM/Hannspree整機產品清單20221205.xlsx"
+    hannspree_data_dir = "../data/PLM/Hannspree整機產品清單20221229.xlsx"
 
     x = Classification(cell_data_dir,lcm_data_dir,tp_data_dir,systemBoard_data_dir,solution_data_dir,hannspree_data_dir)
     tft_p_df,tft_c_df,paper_p_df,paper_c_df,solution_df,solution_hannspree_df,hannspree_df,out_json = x.output_folder()

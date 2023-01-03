@@ -152,7 +152,7 @@ def content_based(df : pd.DataFrame,
 
 if __name__ == '__main__':
     # (LCM CELL TP) data
-    filePath = "../data/CELL_LCM_TP.xlsx"
+    filePath = "../data/PLM/CELL_LCM_TP.xlsx"
     data = pd.read_excel(filePath)
 
     # clean and encode

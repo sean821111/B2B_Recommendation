@@ -3,11 +3,11 @@ import re
 import matplotlib.pyplot as plt
 import plotly.express as px
 
-path = "D:\\Junxiang\Digital Platform\Data\PLM\\"
+path = "../data/PLM/"
 
-df_cell = pd.read_excel(path+"Cell產品清單20221205.xlsx")
-df_lcm = pd.read_excel(path+"LCM產品清單20221205.xlsx")
-df_tp = pd.read_excel(path+"TP產品清單20221205.xlsx")
+df_cell = pd.read_excel(path+"Cell產品清單20221229.xlsx")
+df_lcm = pd.read_excel(path+"LCM產品清單20221229.xlsx")
+df_tp = pd.read_excel(path+"TP產品清單20221229.xlsx")
 
 # intersection of columns
 filter_cols = set(df_cell.columns)&set(df_lcm.columns)&set(df_tp.columns)
@@ -16,7 +16,7 @@ filter_cols = set(df_cell.columns)&set(df_lcm.columns)&set(df_tp.columns)
 filter_cols = set([ 'WTPARTNUMBER'
                     ,'DISPLAY_AREA_DIAGONAL_SIZE'
                     ,'RESOLUTION'
-                    ,'ASPECT_RATIO'
+                    ,'ASPECT_RATIO_2'
                     ,'OUTLINE_TYP_HV'
                     ,'GLASS_THICKNESS'
                     ,'COLORGAMUT'
@@ -44,7 +44,7 @@ df_tp_ = df_tp[filter_cols]
 df_sku = pd.concat([df_lcm_, df_cell_, df_tp_], axis=0)
 df_sku.reset_index(inplace=True)
 
-df_sku.to_excel(path+"magento_SKU.xlsx", index=False)
+df_sku.to_excel(path+"CELL_LCM_TP.xlsx", index=False)
 
 # Pending features
 df_sku_pending = df_sku[['COLOR_NUMBER', 'BRIGHTNESS', 'OPERATION_TEMP', 'STORAGE_TEMP']]
