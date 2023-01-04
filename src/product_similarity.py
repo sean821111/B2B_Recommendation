@@ -4,6 +4,7 @@ import data_cleanning as dc
 import classification
 from recommendation_model import Recommend
 import json
+from multiprocessing.dummy import Pool as ThreadPool
 
 class Dissimilarity():
     """
@@ -88,8 +89,23 @@ class Dissimilarity():
 
         # separte to tdtdisplay, ... (total 7 types)
         *lcm_cell_tp, solution_df, solution_hannspree_df, hannspree_df = classification.main()
-        df_tft_p, df_tft_c, df_paper_p, df_paper_c = [content_based(pd.merge(df, tmp, how="inner", on="WTPARTNUMBER")) \
-                                                      for tmp in lcm_cell_tp]
+
+        def content_based(df : pd.DataFrame,
+                        target_feature : str="WTPARTNUMBER"):
+
+            Recom = Recommend(df, target_feature)
+
+            # using the target_attr_table to calculate the target similarity
+            cosine_sim = Recom.cosine_similarity()
+
+            sku = df[target_feature]
+            df_simMatrix = pd.DataFrame(cosine_sim, columns=sku)
+            df_simMatrix["SKU"] = sku
+
+            return df_simMatrix
+
+        with ThreadPool(12) as pool:
+            df_tft_p, df_tft_c, df_paper_p, df_paper_c = pool.map(content_based, [pd.merge(df, tmp, how="inner", on="WTPARTNUMBER") for tmp in lcm_cell_tp])
 
         magento_skus = set(df_tft_p["SKU"])|\
                         set(df_tft_c["SKU"])|\
@@ -100,6 +116,8 @@ class Dissimilarity():
                         set(hannspree_df["WTPARTNUMBER"])
 
         def helper(df_type, type_, sku):
+            if sku not in skus_similar: skus_similar[sku] = {}
+
             if sku in df_type['SKU'].values:
                 sku_similar = df_type.sort_values(by=[sku], ascending=[False])[["SKU", sku]]
                 sku_list = sku_similar["SKU"].iloc[:topN].to_list()
@@ -122,33 +140,20 @@ class Dissimilarity():
                 else:
                     skus_similar[sku][type_] = []
 
-        for sku in magento_skus:
-            if sku not in skus_similar: skus_similar[sku] = {}
-
+        def rule_thread(sku):
             helper(df_tft_p, "tftdisplay_Preferred", sku)
             helper(df_tft_c, "tftdisplay_Custom", sku)
             helper(df_paper_p, "paperdisplay_Preferred", sku)
             helper(df_paper_c, "paperdisplay_Custom", sku)
+        
+        with ThreadPool(16) as pool:
+            pool.map(rule_thread, [sku for sku in magento_skus])
         
         helper_rule(solution_df, "systemBoard")
         helper_rule(solution_hannspree_df, "solution_hannspree")
         helper_rule(hannspree_df, "hannspree")
 
         return skus_similar
-
-def content_based(df : pd.DataFrame,
-                  target_feature : str="WTPARTNUMBER"):
-
-    Recom = Recommend(df, target_feature)
-
-    # using the target_attr_table to calculate the target similarity
-    cosine_sim = Recom.cosine_similarity()
-
-    sku = df[target_feature]
-    df_simMatrix = pd.DataFrame(cosine_sim, columns=sku)
-    df_simMatrix["SKU"] = sku
-
-    return df_simMatrix
 
 if __name__ == '__main__':
     # (LCM CELL TP) data
@@ -164,5 +169,5 @@ if __name__ == '__main__':
 
     skus_similar = Dissimilarity.batch_similarItems(df)
 
-    with open("../data/PLM/SKU_Similar.json", "w") as outfile:
+    with open("../data/PLM/SKU_Similar_thread.json", "w") as outfile:
         json.dump(skus_similar, outfile)
