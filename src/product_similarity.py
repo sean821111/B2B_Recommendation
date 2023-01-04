@@ -104,7 +104,7 @@ class Dissimilarity():
 
             return df_simMatrix
 
-        with ThreadPool(12) as pool:
+        with ThreadPool(4) as pool:
             df_tft_p, df_tft_c, df_paper_p, df_paper_c = pool.map(content_based, [pd.merge(df, tmp, how="inner", on="WTPARTNUMBER") for tmp in lcm_cell_tp])
 
         magento_skus = set(df_tft_p["SKU"])|\
@@ -146,7 +146,7 @@ class Dissimilarity():
             helper(df_paper_p, "paperdisplay_Preferred", sku)
             helper(df_paper_c, "paperdisplay_Custom", sku)
         
-        with ThreadPool(16) as pool:
+        with ThreadPool(20) as pool:
             pool.map(rule_thread, [sku for sku in magento_skus])
         
         helper_rule(solution_df, "systemBoard")
