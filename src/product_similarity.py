@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np 
 import data_cleanning as dc
@@ -5,6 +6,8 @@ import classification
 from recommendation_model import Recommend
 import json
 from multiprocessing.dummy import Pool as ThreadPool
+import time
+CPUS = os.cpu_count()
 
 class Dissimilarity():
     """
@@ -104,7 +107,7 @@ class Dissimilarity():
 
             return df_simMatrix
 
-        with ThreadPool(4) as pool:
+        with ThreadPool(CPUS) as pool:
             df_tft_p, df_tft_c, df_paper_p, df_paper_c = pool.map(content_based, [pd.merge(df, tmp, how="inner", on="WTPARTNUMBER") for tmp in lcm_cell_tp])
 
         magento_skus = set(df_tft_p["SKU"])|\
@@ -119,7 +122,7 @@ class Dissimilarity():
             if sku not in skus_similar: skus_similar[sku] = {}
 
             if sku in df_type['SKU'].values:
-                sku_similar = df_type.sort_values(by=[sku], ascending=[False])[["SKU", sku]]
+                sku_similar = df_type[["SKU", sku]].sort_values(by=[sku], ascending=[False])
                 sku_list = sku_similar["SKU"].iloc[:topN].to_list()
 
                 # keep input_sku be first element
@@ -146,9 +149,9 @@ class Dissimilarity():
             helper(df_paper_p, "paperdisplay_Preferred", sku)
             helper(df_paper_c, "paperdisplay_Custom", sku)
         
-        with ThreadPool(20) as pool:
+        with ThreadPool(CPUS) as pool:
             pool.map(rule_thread, [sku for sku in magento_skus])
-        
+  
         helper_rule(solution_df, "systemBoard")
         helper_rule(solution_hannspree_df, "solution_hannspree")
         helper_rule(hannspree_df, "hannspree")
